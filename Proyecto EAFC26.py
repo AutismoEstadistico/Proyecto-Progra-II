@@ -1,3 +1,5 @@
+from plotnine import geom_point
+from plotnine import ggplot
 import pandas as pd
 import numpy as np
 import matplotlib as mlt
@@ -11,3 +13,6 @@ datos = datos.drop(columns= ["url","card","ID"])
 datos.head()
 
 ggplot(datos, aes(x = "Preferred foot", y = "OVR", fill = "Position")) + geom_col() + facet_wrap("Position") + theme_bw()
+
+
+ggplot(datos, aes (x = "DEF", y = "PHY", color = "GENDER")) + geom_point() + geom_smooth(method = "lm") + theme_classic()
