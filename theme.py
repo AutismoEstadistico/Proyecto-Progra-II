@@ -60,21 +60,17 @@ def theme_pitch(base_size: int = 12, figure_size=(8, 5)):
 
 
 # Colour scales that match the theme
-def scale_fill_pitch():
-    return scale_fill_manual(values=PALETTE)
+from itertools import cycle, islice
 
+def _palette(n=None):
+    return PALETTE if n is None else list(islice(cycle(PALETTE), n))
 
-def scale_color_pitch():
-    return scale_color_manual(values=PALETTE)
+def scale_fill_pitch(n=None):
+    """n = número de categorías; si hay más de 8, recicla colores."""
+    return scale_fill_manual(values=_palette(n))
 
-
-def scale_fill_pitch_c():
-    """Continuous fill: dark green -> gold."""
-    return scale_fill_gradient(low="#2e7d32", high=GOLD)
-
-
-def scale_color_pitch_c():
-    return scale_color_gradient(low="#2e7d32", high=GOLD)
+def scale_color_pitch(n=None):
+    return scale_color_manual(values=_palette(n))
 
 
 # ---------------------------------------------------------------
@@ -199,3 +195,13 @@ _TOKENS = {
 FOOTBALL_CSS = _CSS
 for _name, _value in _TOKENS.items():
     FOOTBALL_CSS = FOOTBALL_CSS.replace(_name, _value)
+
+# Ajusta las llaves a los valores reales de tu columna:
+# datos["Position"].unique()
+POSITION_COLOURS = {
+    "GK": GOLD,
+    "CB": BLUE, "LB": BLUE, "RB": BLUE,
+    "CDM": "#80ed99", "CM": "#80ed99", "CAM": "#80ed99",
+    "LW": ORANGE, "RW": ORANGE,
+    "ST": RED,
+}
