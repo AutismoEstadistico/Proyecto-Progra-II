@@ -1,11 +1,8 @@
-import os
-from plotnine import (ggplot, aes, geom_boxplot, geom_col, geom_histogram, geom_point)
+from functools import partial
 import pandas as pd
-import numpy as np
-import matplotlib as mlt
-import seaborn as sns
-import plotly.express as px
-from shiny import App , render, ui
+from plotnine import ggplot, aes, geom_bar
+from shiny.express import input, render, ui
+from shiny.ui import page_navbar
 from theme import (
     FOOTBALL_CSS, FONT_LINK, POSITION_COLOURS, GOLD, PITCH_DARK,
     theme_pitch,
@@ -25,64 +22,28 @@ POSITION_GROUPS = {
 }
 datos["PosGroup"] = datos["Position"].map(POSITION_GROUPS)
 
-app_ui = ui.page_fluid(
-    ui.h2("Datos de FC26"),
-     ui.navset_card_tab(
-        #Grafico 1
-        ui.nav_panel(
-            "Tab 1: Algo",
-            ui.h4("Titulo grafico"),
-            #Todo lo del grafico 1 va aca
-        ),
-        #Grafico 2
-         ui.nav_panel(
-            "Tab 2: Algo",
-            ui.h4("Titulo grafico"),
-            #Todo lo del grafico 2 va aca
-        ),
-        #Grafico 3
-         ui.nav_panel(
-            "Tab 1: Algo",
-            ui.h4("Titulo grafico"),
-            #Todo lo del grafico 3 va aca
-        ),
-         #Grafico 4
-         ui.nav_panel(
-            "Tab 1: Algo",
-            ui.h4("Titulo grafico"),
-            #Todo lo del grafico 4 va aca
-        ),
-        #Grafico 5
-         ui.nav_panel(
-            "Tab 1: Algo",
-            ui.h4("Titulo grafico"),
-            #Todo lo del grafico 5 va aca
+ui.page_opts(
+    title="EA FC 26",
+    page_fn=partial(page_navbar, id="page"),
+)
+
+with ui.nav_panel("Tab 1"):
+    @render.plot
+    def grafico1():
+        return (
+            ggplot(datos.dropna(subset=["PosGroup"]), aes(x="PosGroup"))
+            + geom_bar()
+            + theme_pitch()
         )
-)
 
-)
+with ui.nav_panel("Tab 2"):
+    @render.plot
+    def grafico2():
+        return (
+            ggplot(datos, aes(x="Position"))
+            + geom_bar()
+            + theme_pitch()
+        )
 
-def server(input, output, session):
-    #Tab 1
-    @render.plot
-    
-    #Grafico aca
-    #Tab 2
-    @render.plot
-    
-    #Grafico aca
-
-    #Tab 3
-    @render.plot
-    
-    #Grafico aca
-    #Tab 4
-    @render.plot
-    
-    #Grafico aca
-
-    #Tab 5
-    @render.plot
-    #Grafico aca
-
-app = App(app_ui, server)
+with ui.nav_panel("Tab 3"):
+    "Contenido de la pestaña 3"
