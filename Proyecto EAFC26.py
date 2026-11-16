@@ -17,6 +17,15 @@ from theme import (
 datos = pd.read_csv("EAFC26.csv")
 datos = datos.drop(columns= ["url","card","ID"])
 
+fig, ax = mlt.subplots(figsize = (5,3))
+
+ax.hist(datos["Age"], bins=8, linewidth=0.5, edgecolor="white")
+
+ax.set(xlim=(0, 8), xticks=np.arange(1, 8),
+       ylim=(0, 56), yticks=np.linspace(0, 56, 9))
+
+mlt.show()
+
 POSITION_GROUPS = {
     "GK": "GK",
     "CB": "DEF", "LB": "DEF", "RB": "DEF",
@@ -82,7 +91,7 @@ def server(input, output, session):
     #Grafico aca
 
     #Tab 5
-    @render.plot
+    #@render.plot
     #Grafico aca
 
 app = App(app_ui, server)
