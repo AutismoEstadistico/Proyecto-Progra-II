@@ -1,6 +1,10 @@
 from functools import partial
 from itertools import cycle
 import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+import numpy as np
+from plotnine import aes, element_text, geom_bar, geom_boxplot, ggplot, labs, theme
 from plotnine import aes, element_text, geom_bar, geom_boxplot, geom_line, geom_point, ggplot, labs, theme
 from shiny.express import input, render, ui
 from shiny.ui import page_navbar
@@ -45,6 +49,10 @@ POSITION_GROUPS = {
     "ST": "ATT", "LW": "ATT", "RW": "ATT",
 }
 datos["PosGroup"] = datos["Position"].map(POSITION_GROUPS)
+datos["GrupoEdad"] = pd.cut(
+    datos["Age"],
+    bins=[0, 23, 29, 100],
+    labels=["23 años o menos", "de 24 a 29 años", "30 años o más"],)
 colores = dict(zip(mis_5_ligas, cycle(PALETTE)))
 
 # --- Agrupación de posiciones para el gráfico de Tab 2 ---
@@ -157,4 +165,130 @@ with ui.nav_panel("Tab 2"):
       )
 
 with ui.nav_panel("Tab 3"):
-    "Contenido de la pestaña 3"
+  with ui.layout_sidebar():
+    with ui.sidebar():
+      ui.input_checkbox_group(
+          "GruposEdad",
+          "Grupo de Edad",
+          choices=["23 años o menos", "de 24 a 29 años", "30 años o más"],
+          selected=["23 años o menos"],
+      )
+
+    @render.plot
+    def grafico3():
+      seleccion = input.GruposEdad()
+      stats = ["PAC", "SHO", "PAS", "DRI", "DEF", "PHY"]
+      angulos = np.linspace(0, 2 * np.pi, len(stats), endpoint=False).tolist()
+      angulos += angulos[:1]
+
+      fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
+      fig.subplots_adjust(left=0.0, right=0.40, top=0.82, bottom=0.12)
+      fig.patch.set_facecolor("#0a2912")
+      ax.set_facecolor("none")
+
+      fondo_cuadro = Rectangle(
+          (-0.45, -0.18),
+          1.90,
+          1.40,
+          transform=ax.transAxes,
+          facecolor=PITCH_DARK,
+          edgecolor="none",
+          linewidth=1.2,
+          clip_on=False,
+          zorder=0,
+      )
+      ax.add_patch(fondo_cuadro)
+      x_izq, y_inf = fondo_cuadro.get_xy()
+      x_der = x_izq + fondo_cuadro.get_width()
+      y_sup = y_inf + fondo_cuadro.get_height()
+
+      ax.plot(
+          [x_izq, x_der],
+          [0.5, 0.5],
+          transform=ax.transAxes,
+          color=WHITE,
+          linewidth=0.6,
+          alpha=0.25,
+          clip_on=False,
+          zorder=1,
+      )
+
+      ax.plot(
+          [0.5, 0.5],
+          [y_inf, y_sup],
+          transform=ax.transAxes,
+          color=WHITE,
+          linewidth=0.6,
+          alpha=0.25,
+          clip_on=False,
+          zorder=1,
+      )
+      ax.set_theta_offset(np.pi / 2)
+      ax.set_theta_direction(-1)
+
+      ax.set_xticks(angulos[:-1])
+      ax.set_xticklabels(stats, color=GOLD, fontsize=12, fontweight="bold")
+      ax.set_ylim(0, 100)
+      ax.set_yticks([20, 40, 60, 80])
+      ax.set_yticklabels(["20", "40", "60", "80"], color=WHITE, fontsize=8)
+      ax.grid(color=WHITE, alpha=0.25)
+      ax.spines["polar"].set_color(WHITE)
+      ax.spines["polar"].set_alpha(0.3)
+
+      if not seleccion:
+        ax.set_title("Selecciona al menos un grupo de edad", color=WHITE, pad=25)
+        ax.plot([], [], color="none", label="23 años o menos (n=0000)")
+        leyenda_vacia = ax.legend(
+            loc="center left",
+            bbox_to_anchor=(1.52, 0.5),
+            frameon=False,
+            title="Rango de Edad",
+            alignment="left",
+        )
+        leyenda_vacia.get_title().set_alpha(0)
+        for texto in leyenda_vacia.get_texts():
+          texto.set_alpha(0)
+        return fig
+
+      colores_edad = {
+          "23 años o menos": "#00E5FF",
+          "de 24 a 29 años": GOLD,
+          "30 años o más": "#FF5252",
+      }
+
+      for grupo in seleccion:
+        sub_df = datos[datos["GrupoEdad"] == grupo]
+        promedios = sub_df[stats].mean().tolist()
+        promedios += promedios[:1]
+
+        ax.plot(
+            angulos,
+            promedios,
+            linewidth=2.2,
+            label=f"{grupo} ({len(sub_df)})",
+            color=colores_edad[grupo],
+        )
+        ax.fill(angulos, promedios, color=colores_edad[grupo], alpha=0.2)
+
+      ax.set_title(
+          "",
+          color=GOLD,
+          fontsize=14,
+          fontweight="bold",
+          pad=25,
+      )
+
+      leyenda = ax.legend(
+          loc="center left",
+          bbox_to_anchor=(1.52, 0.5),
+          frameon=False,
+          title="Rango de Edad",
+          alignment="left",
+      )
+      leyenda.get_title().set_color(GOLD)
+      leyenda.get_title().set_fontweight("bold")
+      leyenda.get_title().set_fontsize(12)
+      for texto in leyenda.get_texts():
+        texto.set_color(WHITE)
+
+      return fig
