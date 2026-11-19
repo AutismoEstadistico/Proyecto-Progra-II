@@ -49,10 +49,8 @@ POSITION_GROUPS = {
     "ST": "ATT", "LW": "ATT", "RW": "ATT",
 }
 datos["PosGroup"] = datos["Position"].map(POSITION_GROUPS)
-datos["GrupoEdad"] = pd.cut(
-    datos["Age"],
-    bins=[0, 23, 29, 100],
-    labels=["23 años o menos", "de 24 a 29 años", "30 años o más"],)
+edad_min = int(datos["Age"].min())
+edad_max = int(datos["Age"].max())
 colores = dict(zip(mis_5_ligas, cycle(PALETTE)))
 
 # --- Agrupación de posiciones para el gráfico de Tab 2 ---
@@ -167,16 +165,23 @@ with ui.nav_panel("Tab 2"):
 with ui.nav_panel("Tab 3"):
   with ui.layout_sidebar():
     with ui.sidebar():
-      ui.input_checkbox_group(
-          "GruposEdad",
-          "Grupo de Edad",
-          choices=["23 años o menos", "de 24 a 29 años", "30 años o más"],
-          selected=["23 años o menos"],
+      ui.input_slider(
+          "RangoEdad1",
+          "Rango de Edad 1",
+          min=edad_min,
+          max=edad_max,
+          value=(17, 17),
+      )
+      ui.input_slider(
+          "RangoEdad2",
+          "Rango de Edad 2",
+          min=edad_min,
+          max=edad_max,
+          value=(44, 44),
       )
 
     @render.plot
     def grafico3():
-      seleccion = input.GruposEdad()
       stats = ["PAC", "SHO", "PAS", "DRI", "DEF", "PHY"]
       angulos = np.linspace(0, 2 * np.pi, len(stats), endpoint=False).tolist()
       angulos += angulos[:1]
@@ -235,14 +240,39 @@ with ui.nav_panel("Tab 3"):
       ax.spines["polar"].set_color(WHITE)
       ax.spines["polar"].set_alpha(0.3)
 
-      if not seleccion:
-        ax.set_title("Selecciona al menos un grupo de edad", color=WHITE, pad=25)
-        ax.plot([], [], color="none", label="23 años o menos (n=0000)")
+      rangos = [
+          (input.RangoEdad1(), "#00E5FF"),
+          (input.RangoEdad2(), "#FF5252"),
+      ]
+
+      graficados = 0
+      for (r_min, r_max), color in rangos:
+        sub_df = datos[datos["Age"].between(r_min, r_max)]
+        if sub_df.empty:
+          continue
+
+        promedios = sub_df[stats].mean().tolist()
+        promedios += promedios[:1]
+
+        etiqueta_edad = f"{r_min} años" if r_min == r_max else f"{r_min}-{r_max} años"
+        ax.plot(
+            angulos,
+            promedios,
+            linewidth=2.2,
+            label=f"{etiqueta_edad} ({len(sub_df)})",
+            color=color,
+        )
+        ax.fill(angulos, promedios, color=color, alpha=0.2)
+        graficados += 1
+
+      if graficados == 0:
+        ax.set_title("Sin jugadores en los rangos elegidos", color=WHITE, pad=25)
+        ax.plot([], [], color="none", label="19-21 años (0000)")
         leyenda_vacia = ax.legend(
             loc="center left",
             bbox_to_anchor=(1.52, 0.5),
             frameon=False,
-            title="Rango de Edad",
+            title="Rangos de Edad",
             alignment="left",
         )
         leyenda_vacia.get_title().set_alpha(0)
@@ -250,39 +280,13 @@ with ui.nav_panel("Tab 3"):
           texto.set_alpha(0)
         return fig
 
-      colores_edad = {
-          "23 años o menos": "#00E5FF",
-          "de 24 a 29 años": GOLD,
-          "30 años o más": "#FF5252",
-      }
-
-      for grupo in seleccion:
-        sub_df = datos[datos["GrupoEdad"] == grupo]
-        promedios = sub_df[stats].mean().tolist()
-        promedios += promedios[:1]
-
-        ax.plot(
-            angulos,
-            promedios,
-            linewidth=2.2,
-            label=f"{grupo} ({len(sub_df)})",
-            color=colores_edad[grupo],
-        )
-        ax.fill(angulos, promedios, color=colores_edad[grupo], alpha=0.2)
-
-      ax.set_title(
-          "",
-          color=GOLD,
-          fontsize=14,
-          fontweight="bold",
-          pad=25,
-      )
+      ax.set_title("", color=GOLD, fontsize=14, fontweight="bold", pad=25)
 
       leyenda = ax.legend(
           loc="center left",
           bbox_to_anchor=(1.52, 0.5),
           frameon=False,
-          title="Rango de Edad",
+          title="Rangos de Edad",
           alignment="left",
       )
       leyenda.get_title().set_color(GOLD)
