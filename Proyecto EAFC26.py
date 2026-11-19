@@ -64,8 +64,8 @@ POSITION_GROUPS_TAB2 = {
     "LB": "LB/RB", "RB": "LB/RB",
     "CDM": "CDM",
     "CM": "CM",
-    "LM": "LM/RM", "RM": "LM/RM",
     "CAM": "CAM",
+    "LM": "LM/RM", "RM": "LM/RM",
     "LW": "RW/LW", "RW": "RW/LW",
     "ST": "ST",
     # GK no está en el diccionario -> queda como NaN y se filtra después
