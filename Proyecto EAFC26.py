@@ -1,5 +1,5 @@
 from functools import partial
-from itertools import cycle
+from itertools import cycle 
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
@@ -57,7 +57,7 @@ colores = dict(zip(mis_5_ligas, cycle(PALETTE)))
 
 # --- Agrupación de posiciones para el gráfico de Tab 2 ---
 # Orden fijo pedido para el eje X (se excluye GK a propósito)
-POS_ORDER_TAB2 = ["CB", "LB/RB", "CDM", "CM", "LM/RM", "CAM", "RW/LW", "ST"]
+POS_ORDER_TAB2 = ["CB", "LB/RB", "CDM", "CM", "CAM", "LM/RM", "RW/LW", "ST"]
 
 POSITION_GROUPS_TAB2 = {
     "CB": "CB",
