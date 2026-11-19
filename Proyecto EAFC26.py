@@ -1,9 +1,12 @@
+from matplotlib.pyplot import plot
 from functools import partial
 from itertools import cycle
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import numpy as np
+import theme_sns 
 from plotnine import aes, element_text, geom_bar, geom_boxplot, ggplot, labs, theme
 from plotnine import aes, element_text, geom_bar, geom_boxplot, geom_line, geom_point, ggplot, labs, theme
 from shiny.express import input, render, ui
@@ -18,6 +21,8 @@ from theme import (
     WHITE,
     scale_fill_pitch,
     theme_pitch,
+    CARD_BG,
+    GRID,
 )
 from theme_ui import shiny_theme
 
@@ -82,6 +87,26 @@ STATS_COLS = [
     "Standing Tackle", "Sliding Tackle", "Jumping", "Stamina", "Strength",
     "Aggression",
 ]
+sns.set_theme(
+    style="darkgrid",
+    rc={
+        "figure.facecolor": CARD_BG,
+        "axes.facecolor": PITCH_DARK,
+        "axes.edgecolor": PITCH_DARK,
+        "grid.color": GRID,
+        "text.color": WHITE,
+        "axes.labelcolor": GOLD,
+        "axes.titlecolor": WHITE,
+        "xtick.color": WHITE,
+        "ytick.color": WHITE,
+        "legend.facecolor": CARD_BG,
+        "legend.edgecolor": CARD_BG,
+        "axes.spines.top": False,
+        "axes.spines.right": False,
+        "axes.spines.left": False,
+        "axes.spines.bottom": False,
+    },
+)
 
 ui.page_opts(
     title="EA FC 26",
@@ -93,10 +118,10 @@ ui.page_opts(
 with ui.nav_panel("Hola :D"):
     with ui.layout_columns(col_widths=(6, 6, 12)):
         with ui.card():
-            ui.p("Este es nuestro proyecto de programacion II, una app usando datos de EAFC26! ")
+            ui.p("Este es nuestro proyecto de programación II, una app usando datos de EAFC26! ")
 
         with ui.card():
-            ui.p("A continuacion veran una serie de graficos hechos con las librerias plotnine y seaborne. Para ver cada grafico, vayan a la tab correspondiente de cada uno")
+            ui.p("A continuación verán una serie de gráficos hechos con las librerías plotnine y seaborne. Para ver cada gráfico, vayan a la tab correspondiente de cada uno.")
         with ui.card(style="width: fit-content; margin: 0 auto; text-align: center;"):
             ui.p("Aupa Athletic")
             ui.img(src = "AthleticCopaCampeones.jpg",style="max-height: 400px; width: auto; display: block; margin: 0 auto;")
@@ -108,7 +133,7 @@ with ui.nav_panel("OVR Ligas"):
             "Ligas",
             "Ligas",
             choices=mis_5_ligas,
-            selected=["LALIGA EA SPORTS"],
+            selected=[top_ligas],
         )
 
     @render.plot
@@ -302,4 +327,40 @@ with ui.nav_panel("Tab 3"):
       for texto in leyenda.get_texts():
         texto.set_color(WHITE)
 
-      return fig
+      return(fig)
+with ui.nav_panel("GK"):
+  with ui.layout_sidebar():
+    with ui.sidebar():
+        ui.input_slider(
+            "gk",
+            "Edad del portero",
+            min=17,
+            max=44,
+            value=(17, 44), 
+        )
+
+    @render.plot
+    def grafico5():
+        edad_min, edad_max = input.gk()
+        paises = ["Spain",
+                "Argentina",
+                "France",
+                "England",
+                "Morocco"]
+        COLORES_PAIS = dict(zip(paises, theme_sns.pitch_palette(len(paises))))
+        df = datos[
+            (datos["PosGroup"] == "GK")
+            & (datos["Age"].between(edad_min, edad_max))
+            & (datos["Nation"].isin(paises))
+        ]
+        return sns.histplot(
+            data=df,
+            x="OVR",
+            hue="Nation",
+            hue_order= paises,
+            multiple = "stack",
+            palette= COLORES_PAIS,
+                binwidth=5,
+                binrange=(47, 90),
+        )
+     
