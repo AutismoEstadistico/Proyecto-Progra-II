@@ -90,7 +90,18 @@ ui.page_opts(
     theme=shiny_theme(),
 )
 
-with ui.nav_panel("Tab 1"):
+with ui.nav_panel("Hola :D"):
+    with ui.layout_columns(col_widths=(6, 6, 12)):
+        with ui.card():
+            ui.p("Este es nuestro proyecto de programacion II, una app usando datos de EAFC26! ")
+
+        with ui.card():
+            ui.p("A continuacion veran una serie de graficos hechos con las librerias plotnine y seaborne. Para ver cada grafico, vayan a la tab correspondiente de cada uno")
+        with ui.card(style="width: fit-content; margin: 0 auto; text-align: center;"):
+            ui.p("Aupa Athletic")
+            ui.img(src = "AthleticCopaCampeones.jpg",style="max-height: 400px; width: auto; display: block; margin: 0 auto;")
+
+with ui.nav_panel("OVR Ligas"):
   with ui.layout_sidebar():
     with ui.sidebar():
         ui.input_checkbox_group(
