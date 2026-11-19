@@ -207,27 +207,24 @@ with ui.nav_panel("Tab 3"):
       x_der = x_izq + fondo_cuadro.get_width()
       y_sup = y_inf + fondo_cuadro.get_height()
 
-      ax.plot(
-          [x_izq, x_der],
-          [0.5, 0.5],
-          transform=ax.transAxes,
-          color=WHITE,
-          linewidth=0.6,
-          alpha=0.25,
-          clip_on=False,
-          zorder=1,
-      )
+      for deg in [90, 30, -30, -90, -150, 150]:
+        rad = np.deg2rad(deg)
+        dx, dy = np.cos(rad), np.sin(rad)
+        tx = ((x_der - 0.5) / dx) if dx > 1e-9 else (((x_izq - 0.5) / dx) if dx < -1e-9 else np.inf)
+        ty = ((y_sup - 0.5) / dy) if dy > 1e-9 else (((y_inf - 0.5) / dy) if dy < -1e-9 else np.inf)
+        t = min(tx, ty)
 
-      ax.plot(
-          [0.5, 0.5],
-          [y_inf, y_sup],
-          transform=ax.transAxes,
-          color=WHITE,
-          linewidth=0.6,
-          alpha=0.25,
-          clip_on=False,
-          zorder=1,
-      )
+        ax.plot(
+            [0.5, 0.5 + t * dx],
+            [0.5, 0.5 + t * dy],
+            transform=ax.transAxes,
+            color="#2c6b36",
+            linewidth=0.6,
+            alpha=1,
+            clip_on=False,
+            zorder=1,
+        )
+
       ax.set_theta_offset(np.pi / 2)
       ax.set_theta_direction(-1)
 
@@ -236,9 +233,9 @@ with ui.nav_panel("Tab 3"):
       ax.set_ylim(0, 100)
       ax.set_yticks([20, 40, 60, 80])
       ax.set_yticklabels(["20", "40", "60", "80"], color=WHITE, fontsize=8)
-      ax.grid(color=WHITE, alpha=0.25)
-      ax.spines["polar"].set_color(WHITE)
-      ax.spines["polar"].set_alpha(0.3)
+      ax.grid(color="#2c6b36", alpha=1)
+      ax.spines["polar"].set_color("#2c6b36")
+      ax.spines["polar"].set_alpha(1)
 
       rangos = [
           (input.RangoEdad1(), "#00E5FF"),
