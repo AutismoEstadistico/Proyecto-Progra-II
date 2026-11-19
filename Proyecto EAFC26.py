@@ -116,7 +116,7 @@ ui.page_opts(
 )
 
 with ui.nav_panel("Hola :D"):
-    with ui.layout_columns(col_widths=(6, 6, 12)):
+    with ui.layout_columns(col_widths=(6, 6, 6,6)):
         with ui.card():
             ui.p("Este es nuestro proyecto de programación II, una app usando datos de EAFC26! ")
 
@@ -125,7 +125,9 @@ with ui.nav_panel("Hola :D"):
         with ui.card(style="width: fit-content; margin: 0 auto; text-align: center;"):
             ui.p("Aupa Athletic")
             ui.img(src = "AthleticCopaCampeones.jpg",style="max-height: 400px; width: auto; display: block; margin: 0 auto;")
-
+        with ui.card(style="width: fit-content; margin: 0 auto; text-align: center;"):
+            ui.p("Visca Barca")
+            ui.img(src = "fcbarcelonachampions.png",style="max-height: 400px; width: auto; display: block; margin: 0 auto;")
 with ui.nav_panel("OVR Ligas"):
   with ui.layout_sidebar():
     with ui.sidebar():
