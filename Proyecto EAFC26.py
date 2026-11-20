@@ -73,10 +73,8 @@ POSITION_GROUPS = {
     "ST": "ATT", "LW": "ATT", "RW": "ATT",
 }
 datos["PosGroup"] = datos["Position"].map(POSITION_GROUPS)
-datos["GrupoEdad"] = pd.cut(
-    datos["Age"],
-    bins=[0, 23, 29, 100],
-    labels=["23 años o menos", "de 24 a 29 años", "30 años o más"],)
+edad_min = int(datos["Age"].min())
+edad_max = int(datos["Age"].max())
 colores = dict(zip(mis_5_ligas, cycle(PALETTE)))
 
 # --- Agrupación de posiciones para el gráfico de Tab 2 ---
@@ -203,16 +201,23 @@ with ui.nav_panel("Stats por pos"):
 with ui.nav_panel("Spider"):
   with ui.layout_sidebar():
     with ui.sidebar():
-      ui.input_checkbox_group(
-          "GruposEdad",
-          "Grupo de Edad",
-          choices=["23 años o menos", "de 24 a 29 años", "30 años o más"],
-          selected=["23 años o menos"],
+      ui.input_slider(
+          "RangoEdad1",
+          "Rango de Edad 1",
+          min=edad_min,
+          max=edad_max,
+          value=(17, 17),
+      )
+      ui.input_slider(
+          "RangoEdad2",
+          "Rango de Edad 2",
+          min=edad_min,
+          max=edad_max,
+          value=(44, 44),
       )
 
     @render.plot
     def grafico3():
-      seleccion = input.GruposEdad()
       stats = ["PAC", "SHO", "PAS", "DRI", "DEF", "PHY"]
       angulos = np.linspace(0, 2 * np.pi, len(stats), endpoint=False).tolist()
       angulos += angulos[:1]
@@ -238,27 +243,25 @@ with ui.nav_panel("Spider"):
       x_der = x_izq + fondo_cuadro.get_width()
       y_sup = y_inf + fondo_cuadro.get_height()
 
-      ax.plot(
-          [x_izq, x_der],
-          [0.5, 0.5],
-          transform=ax.transAxes,
-          color=WHITE,
-          linewidth=0.6,
-          alpha=0.25,
-          clip_on=False,
-          zorder=1,
-      )
+      for deg in [90, 30, -30, -90, -150, 150]:
+        rad = np.deg2rad(deg)
+        dx, dy = np.cos(rad), np.sin(rad)
+        tx = ((x_der - 0.5) / dx) if dx > 1e-9 else (((x_izq - 0.5) / dx) if dx < -1e-9 else np.inf)
+        ty = ((y_sup - 0.5) / dy) if dy > 1e-9 else (((y_inf - 0.5) / dy) if dy < -1e-9 else np.inf)
+        t = min(tx, ty)
 
-      ax.plot(
-          [0.5, 0.5],
-          [y_inf, y_sup],
-          transform=ax.transAxes,
-          color=WHITE,
-          linewidth=0.6,
-          alpha=0.25,
-          clip_on=False,
-          zorder=1,
-      )
+        ax.plot(
+            [0.5, 0.5 + t * dx],
+            [0.5, 0.5 + t * dy],
+            transform=ax.transAxes,
+            color="#2c6b36",
+            linewidth=0.6,
+            alpha=1,
+            clip_on=False,
+            zorder=1,
+        )
+
+
       ax.set_theta_offset(np.pi / 2)
       ax.set_theta_direction(-1)
 
@@ -267,18 +270,43 @@ with ui.nav_panel("Spider"):
       ax.set_ylim(0, 100)
       ax.set_yticks([20, 40, 60, 80])
       ax.set_yticklabels(["20", "40", "60", "80"], color=WHITE, fontsize=8)
-      ax.grid(color=WHITE, alpha=0.25)
-      ax.spines["polar"].set_color(WHITE)
-      ax.spines["polar"].set_alpha(0.3)
+      ax.grid(color="#2c6b36", alpha=1)
+      ax.spines["polar"].set_color("#2c6b36")
+      ax.spines["polar"].set_alpha(1)
 
-      if not seleccion:
-        ax.set_title("Selecciona al menos un grupo de edad", color=WHITE, pad=25)
-        ax.plot([], [], color="none", label="23 años o menos (n=0000)")
+      rangos = [
+          (input.RangoEdad1(), "#00E5FF"),
+          (input.RangoEdad2(), "#FF5252"),
+      ]
+
+      graficados = 0
+      for (r_min, r_max), color in rangos:
+        sub_df = datos[datos["Age"].between(r_min, r_max)]
+        if sub_df.empty:
+          continue
+
+        promedios = sub_df[stats].mean().tolist()
+        promedios += promedios[:1]
+
+        etiqueta_edad = f"{r_min} años" if r_min == r_max else f"{r_min}-{r_max} años"
+        ax.plot(
+            angulos,
+            promedios,
+            linewidth=2.2,
+            label=f"{etiqueta_edad} ({len(sub_df)})",
+            color=color,
+        )
+        ax.fill(angulos, promedios, color=color, alpha=0.2)
+        graficados += 1
+
+      if graficados == 0:
+        ax.set_title("Sin jugadores en los rangos elegidos", color=WHITE, pad=25)
+        ax.plot([], [], color="none", label="19-21 años (0000)")
         leyenda_vacia = ax.legend(
             loc="center left",
             bbox_to_anchor=(1.52, 0.5),
             frameon=False,
-            title="Rango de Edad",
+            title="Rangos de Edad",
             alignment="left",
         )
         leyenda_vacia.get_title().set_alpha(0)
@@ -286,39 +314,13 @@ with ui.nav_panel("Spider"):
           texto.set_alpha(0)
         return fig
 
-      colores_edad = {
-          "23 años o menos": "#00E5FF",
-          "de 24 a 29 años": GOLD,
-          "30 años o más": "#FF5252",
-      }
-
-      for grupo in seleccion:
-        sub_df = datos[datos["GrupoEdad"] == grupo]
-        promedios = sub_df[stats].mean().tolist()
-        promedios += promedios[:1]
-
-        ax.plot(
-            angulos,
-            promedios,
-            linewidth=2.2,
-            label=f"{grupo} ({len(sub_df)})",
-            color=colores_edad[grupo],
-        )
-        ax.fill(angulos, promedios, color=colores_edad[grupo], alpha=0.2)
-
-      ax.set_title(
-          "",
-          color=GOLD,
-          fontsize=14,
-          fontweight="bold",
-          pad=25,
-      )
+      ax.set_title("", color=GOLD, fontsize=14, fontweight="bold", pad=25)
 
       leyenda = ax.legend(
           loc="center left",
           bbox_to_anchor=(1.52, 0.5),
           frameon=False,
-          title="Rango de Edad",
+          title="Rangos de Edad",
           alignment="left",
       )
       leyenda.get_title().set_color(GOLD)
@@ -328,19 +330,7 @@ with ui.nav_panel("Spider"):
         texto.set_color(WHITE)
 
       return(fig)
-    ligas_tab4 = [
-    "LALIGA EA SPORTS",
-    "PREMIER LEAGUE",
-    "SERIE A ENILIVE",
-    "BUNDESLIGA",
-    "LIGUE 1 MCDONALD'S",
-    "MLS",
-    "LIGA PORTUGAL",
-    "TRENDYOL SÜPER LIG",
-    "EREDIVISIE",
-    "LPF",
-    "ROSHN SAUDI LEAGUE",
-]
+
 
 with ui.nav_panel("Tiros"):
   with ui.layout_sidebar():
