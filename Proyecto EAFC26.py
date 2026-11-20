@@ -133,7 +133,7 @@ with ui.nav_panel("OVR Ligas"):
             "Ligas",
             "Ligas",
             choices=mis_5_ligas,
-            selected=[top_ligas],
+            selected=[mis_5_ligas[0]] if mis_5_ligas else [],
         )
 
     @render.plot
@@ -146,7 +146,7 @@ with ui.nav_panel("OVR Ligas"):
 
       return (
           ggplot(filtered_df, aes(x="League", y="OVR", fill="League"))
-          + geom_boxplot()
+          + geom_boxplot(color="white", outlier_color="white")
           + theme_pitch()
       )
 with ui.nav_panel("Stats por pos"):
@@ -346,7 +346,7 @@ with ui.nav_panel("Tiros"):
   with ui.layout_sidebar():
     with ui.sidebar():
       ui.input_checkbox_group(
-          "liga_tab4", "LIGAS", choices=ligas_tab4, selected=["LALIGA EA SPORTS"]
+          "liga_tab4", "LIGAS", choices=mis_5_ligas, selected=["LALIGA EA SPORTS"]
       )
       ui.input_checkbox_group(
           "pos_tab4",
@@ -357,9 +357,9 @@ with ui.nav_panel("Tiros"):
 
     @render.plot
     def grafico4():
-      df = datos[datos["PosGroup"].isin(input.pos_tab4())]
-      if input.liga_tab4():
-        df = df[df["League"].isin(input.liga_tab4())]
+      df = datos[
+    (datos["PosGroup"].isin(input.pos_tab4()))
+    & (datos["League"].isin(input.liga_tab4()))]
 
       fig, ax = plt.subplots(figsize=(8, 5), facecolor=PITCH_DARK)
       ax.set_facecolor(PITCH_DARK)
