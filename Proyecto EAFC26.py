@@ -1,9 +1,12 @@
+from matplotlib.pyplot import plot
 from functools import partial
-from itertools import cycle 
+from itertools import cycle
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import numpy as np
+import theme_sns 
 from plotnine import aes, element_text, geom_bar, geom_boxplot, ggplot, labs, theme
 from plotnine import aes, element_text, geom_bar, geom_boxplot, geom_line, geom_point, ggplot, labs, theme
 from shiny.express import input, render, ui
@@ -18,10 +21,31 @@ from theme import (
     WHITE,
     scale_fill_pitch,
     theme_pitch,
+    CARD_BG,
+    GRID,
 )
 from theme_ui import shiny_theme
 
-
+sns.set_theme(
+    style="darkgrid",
+    rc={
+        "figure.facecolor": CARD_BG,
+        "axes.facecolor": PITCH_DARK,
+        "axes.edgecolor": PITCH_DARK,
+        "grid.color": GRID,
+        "text.color": WHITE,
+        "axes.labelcolor": GOLD,
+        "axes.titlecolor": WHITE,
+        "xtick.color": WHITE,
+        "ytick.color": WHITE,
+        "legend.facecolor": CARD_BG,
+        "legend.edgecolor": CARD_BG,
+        "axes.spines.top": False,
+        "axes.spines.right": False,
+        "axes.spines.left": False,
+        "axes.spines.bottom": False,
+    },
+)
 
 # Load your data
 datos = pd.read_csv("EAFC26.csv")
@@ -49,21 +73,23 @@ POSITION_GROUPS = {
     "ST": "ATT", "LW": "ATT", "RW": "ATT",
 }
 datos["PosGroup"] = datos["Position"].map(POSITION_GROUPS)
-edad_min = int(datos["Age"].min())
-edad_max = int(datos["Age"].max())
+datos["GrupoEdad"] = pd.cut(
+    datos["Age"],
+    bins=[0, 23, 29, 100],
+    labels=["23 años o menos", "de 24 a 29 años", "30 años o más"],)
 colores = dict(zip(mis_5_ligas, cycle(PALETTE)))
 
 # --- Agrupación de posiciones para el gráfico de Tab 2 ---
 # Orden fijo pedido para el eje X (se excluye GK a propósito)
-POS_ORDER_TAB2 = ["CB", "LB/RB", "CDM", "CM", "CAM", "LM/RM", "RW/LW", "ST"]
+POS_ORDER_TAB2 = ["CB", "LB/RB", "CDM", "CM", "LM/RM", "CAM", "RW/LW", "ST"]
 
 POSITION_GROUPS_TAB2 = {
     "CB": "CB",
     "LB": "LB/RB", "RB": "LB/RB",
     "CDM": "CDM",
     "CM": "CM",
-    "CAM": "CAM",
     "LM": "LM/RM", "RM": "LM/RM",
+    "CAM": "CAM",
     "LW": "RW/LW", "RW": "RW/LW",
     "ST": "ST",
     # GK no está en el diccionario -> queda como NaN y se filtra después
@@ -81,21 +107,33 @@ STATS_COLS = [
     "Aggression",
 ]
 
+
 ui.page_opts(
     title="EA FC 26",
     page_fn=partial(page_navbar, id="nav"),
     fillable=True,
     theme=shiny_theme(),
 )
-
-with ui.nav_panel("Tab 1"):
+with ui.nav_panel("Hola :D"):
+     with ui.layout_columns(col_widths=(6, 6, 6,6)):
+         with ui.card():
+            ui.p("Este es nuestro proyecto de programación II, una app usando datos de EAFC26! ")
+         with ui.card():
+            ui.p("A continuacion, van a observar una coleccion de graficos hechos con las librerias plotnine y seaborne. Disfruten!")
+         with ui.card(style="width: fit-content; margin: 0 auto; text-align: center;"):
+            ui.p("Aupa Athletic")
+            ui.img(src = "AthleticCopaCampeones.jpg",style="max-height: 400px; width: auto; display: block; margin: 0 auto;")
+         with ui.card(style="width: fit-content; margin: 0 auto; text-align: center;"):
+            ui.p("Visca Barca")
+            ui.img(src = "fcbarcelonachampions.png",style="max-height: 400px; width: auto; display: block; margin: 0 auto;")
+with ui.nav_panel("OVR Ligas"):
   with ui.layout_sidebar():
     with ui.sidebar():
         ui.input_checkbox_group(
             "Ligas",
             "Ligas",
             choices=mis_5_ligas,
-            selected=["LALIGA EA SPORTS"],
+            selected=[top_ligas],
         )
 
     @render.plot
@@ -111,7 +149,7 @@ with ui.nav_panel("Tab 1"):
           + geom_boxplot()
           + theme_pitch()
       )
-with ui.nav_panel("Tab 2"):
+with ui.nav_panel("Stats por pos"):
   with ui.layout_sidebar():
     with ui.sidebar():
         ui.input_checkbox_group(
@@ -162,26 +200,19 @@ with ui.nav_panel("Tab 2"):
           + theme_pitch()
       )
 
-with ui.nav_panel("Tab 3"):
+with ui.nav_panel("Spider"):
   with ui.layout_sidebar():
     with ui.sidebar():
-      ui.input_slider(
-          "RangoEdad1",
-          "Rango de Edad 1",
-          min=edad_min,
-          max=edad_max,
-          value=(17, 17),
-      )
-      ui.input_slider(
-          "RangoEdad2",
-          "Rango de Edad 2",
-          min=edad_min,
-          max=edad_max,
-          value=(44, 44),
+      ui.input_checkbox_group(
+          "GruposEdad",
+          "Grupo de Edad",
+          choices=["23 años o menos", "de 24 a 29 años", "30 años o más"],
+          selected=["23 años o menos"],
       )
 
     @render.plot
     def grafico3():
+      seleccion = input.GruposEdad()
       stats = ["PAC", "SHO", "PAS", "DRI", "DEF", "PHY"]
       angulos = np.linspace(0, 2 * np.pi, len(stats), endpoint=False).tolist()
       angulos += angulos[:1]
@@ -207,24 +238,27 @@ with ui.nav_panel("Tab 3"):
       x_der = x_izq + fondo_cuadro.get_width()
       y_sup = y_inf + fondo_cuadro.get_height()
 
-      for deg in [90, 30, -30, -90, -150, 150]:
-        rad = np.deg2rad(deg)
-        dx, dy = np.cos(rad), np.sin(rad)
-        tx = ((x_der - 0.5) / dx) if dx > 1e-9 else (((x_izq - 0.5) / dx) if dx < -1e-9 else np.inf)
-        ty = ((y_sup - 0.5) / dy) if dy > 1e-9 else (((y_inf - 0.5) / dy) if dy < -1e-9 else np.inf)
-        t = min(tx, ty)
+      ax.plot(
+          [x_izq, x_der],
+          [0.5, 0.5],
+          transform=ax.transAxes,
+          color=WHITE,
+          linewidth=0.6,
+          alpha=0.25,
+          clip_on=False,
+          zorder=1,
+      )
 
-        ax.plot(
-            [0.5, 0.5 + t * dx],
-            [0.5, 0.5 + t * dy],
-            transform=ax.transAxes,
-            color="#2c6b36",
-            linewidth=0.6,
-            alpha=1,
-            clip_on=False,
-            zorder=1,
-        )
-
+      ax.plot(
+          [0.5, 0.5],
+          [y_inf, y_sup],
+          transform=ax.transAxes,
+          color=WHITE,
+          linewidth=0.6,
+          alpha=0.25,
+          clip_on=False,
+          zorder=1,
+      )
       ax.set_theta_offset(np.pi / 2)
       ax.set_theta_direction(-1)
 
@@ -233,43 +267,18 @@ with ui.nav_panel("Tab 3"):
       ax.set_ylim(0, 100)
       ax.set_yticks([20, 40, 60, 80])
       ax.set_yticklabels(["20", "40", "60", "80"], color=WHITE, fontsize=8)
-      ax.grid(color="#2c6b36", alpha=1)
-      ax.spines["polar"].set_color("#2c6b36")
-      ax.spines["polar"].set_alpha(1)
+      ax.grid(color=WHITE, alpha=0.25)
+      ax.spines["polar"].set_color(WHITE)
+      ax.spines["polar"].set_alpha(0.3)
 
-      rangos = [
-          (input.RangoEdad1(), "#00E5FF"),
-          (input.RangoEdad2(), "#FF5252"),
-      ]
-
-      graficados = 0
-      for (r_min, r_max), color in rangos:
-        sub_df = datos[datos["Age"].between(r_min, r_max)]
-        if sub_df.empty:
-          continue
-
-        promedios = sub_df[stats].mean().tolist()
-        promedios += promedios[:1]
-
-        etiqueta_edad = f"{r_min} años" if r_min == r_max else f"{r_min}-{r_max} años"
-        ax.plot(
-            angulos,
-            promedios,
-            linewidth=2.2,
-            label=f"{etiqueta_edad} ({len(sub_df)})",
-            color=color,
-        )
-        ax.fill(angulos, promedios, color=color, alpha=0.2)
-        graficados += 1
-
-      if graficados == 0:
-        ax.set_title("Sin jugadores en los rangos elegidos", color=WHITE, pad=25)
-        ax.plot([], [], color="none", label="19-21 años (0000)")
+      if not seleccion:
+        ax.set_title("Selecciona al menos un grupo de edad", color=WHITE, pad=25)
+        ax.plot([], [], color="none", label="23 años o menos (n=0000)")
         leyenda_vacia = ax.legend(
             loc="center left",
             bbox_to_anchor=(1.52, 0.5),
             frameon=False,
-            title="Rangos de Edad",
+            title="Rango de Edad",
             alignment="left",
         )
         leyenda_vacia.get_title().set_alpha(0)
@@ -277,13 +286,39 @@ with ui.nav_panel("Tab 3"):
           texto.set_alpha(0)
         return fig
 
-      ax.set_title("", color=GOLD, fontsize=14, fontweight="bold", pad=25)
+      colores_edad = {
+          "23 años o menos": "#00E5FF",
+          "de 24 a 29 años": GOLD,
+          "30 años o más": "#FF5252",
+      }
+
+      for grupo in seleccion:
+        sub_df = datos[datos["GrupoEdad"] == grupo]
+        promedios = sub_df[stats].mean().tolist()
+        promedios += promedios[:1]
+
+        ax.plot(
+            angulos,
+            promedios,
+            linewidth=2.2,
+            label=f"{grupo} ({len(sub_df)})",
+            color=colores_edad[grupo],
+        )
+        ax.fill(angulos, promedios, color=colores_edad[grupo], alpha=0.2)
+
+      ax.set_title(
+          "",
+          color=GOLD,
+          fontsize=14,
+          fontweight="bold",
+          pad=25,
+      )
 
       leyenda = ax.legend(
           loc="center left",
           bbox_to_anchor=(1.52, 0.5),
           frameon=False,
-          title="Rangos de Edad",
+          title="Rango de Edad",
           alignment="left",
       )
       leyenda.get_title().set_color(GOLD)
@@ -292,9 +327,8 @@ with ui.nav_panel("Tab 3"):
       for texto in leyenda.get_texts():
         texto.set_color(WHITE)
 
-      return fig
-
-ligas_tab4 = [
+      return(fig)
+    ligas_tab4 = [
     "LALIGA EA SPORTS",
     "PREMIER LEAGUE",
     "SERIE A ENILIVE",
@@ -308,7 +342,7 @@ ligas_tab4 = [
     "ROSHN SAUDI LEAGUE",
 ]
 
-with ui.nav_panel("Tab 4"):
+with ui.nav_panel("Tiros"):
   with ui.layout_sidebar():
     with ui.sidebar():
       ui.input_checkbox_group(
@@ -352,3 +386,49 @@ with ui.nav_panel("Tab 4"):
       ax.spines[["bottom", "left"]].set_color(WHITE)
       plt.tight_layout()
       return fig
+with ui.nav_panel("GK"):
+  with ui.layout_sidebar():
+    with ui.sidebar():
+        ui.input_slider(
+            "gk",
+            "Edad del portero",
+            min=17,
+            max=44,
+            value=(17, 44), 
+        )
+
+    @render.plot
+    def grafico5():
+        edad_min, edad_max = input.gk()
+        paises = ["Spain",
+                "Argentina",
+                "France",
+                "England",
+                "Morocco"]
+        COLORES_PAIS = dict(zip(paises, theme_sns.pitch_palette(len(paises))))
+        df = datos[
+            (datos["PosGroup"] == "GK")
+            & (datos["Age"].between(edad_min, edad_max))
+            & (datos["Nation"].isin(paises))
+        ]
+        return sns.histplot(
+            data=df,
+            x="OVR",
+            hue="Nation",
+            hue_order= paises,
+            multiple = "stack",
+            palette= COLORES_PAIS,
+                binwidth=5,
+                binrange=(47, 90),
+        )
+
+
+
+
+
+
+
+
+
+
+     
