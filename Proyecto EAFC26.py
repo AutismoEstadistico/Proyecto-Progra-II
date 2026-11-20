@@ -26,7 +26,26 @@ from theme import (
 )
 from theme_ui import shiny_theme
 
-
+sns.set_theme(
+    style="darkgrid",
+    rc={
+        "figure.facecolor": CARD_BG,
+        "axes.facecolor": PITCH_DARK,
+        "axes.edgecolor": PITCH_DARK,
+        "grid.color": GRID,
+        "text.color": WHITE,
+        "axes.labelcolor": GOLD,
+        "axes.titlecolor": WHITE,
+        "xtick.color": WHITE,
+        "ytick.color": WHITE,
+        "legend.facecolor": CARD_BG,
+        "legend.edgecolor": CARD_BG,
+        "axes.spines.top": False,
+        "axes.spines.right": False,
+        "axes.spines.left": False,
+        "axes.spines.bottom": False,
+    },
+)
 
 # Load your data
 datos = pd.read_csv("EAFC26.csv")
@@ -87,26 +106,7 @@ STATS_COLS = [
     "Standing Tackle", "Sliding Tackle", "Jumping", "Stamina", "Strength",
     "Aggression",
 ]
-sns.set_theme(
-    style="darkgrid",
-    rc={
-        "figure.facecolor": CARD_BG,
-        "axes.facecolor": PITCH_DARK,
-        "axes.edgecolor": PITCH_DARK,
-        "grid.color": GRID,
-        "text.color": WHITE,
-        "axes.labelcolor": GOLD,
-        "axes.titlecolor": WHITE,
-        "xtick.color": WHITE,
-        "ytick.color": WHITE,
-        "legend.facecolor": CARD_BG,
-        "legend.edgecolor": CARD_BG,
-        "axes.spines.top": False,
-        "axes.spines.right": False,
-        "axes.spines.left": False,
-        "axes.spines.bottom": False,
-    },
-)
+
 
 ui.page_opts(
     title="EA FC 26",
@@ -114,18 +114,16 @@ ui.page_opts(
     fillable=True,
     theme=shiny_theme(),
 )
-
 with ui.nav_panel("Hola :D"):
-    with ui.layout_columns(col_widths=(6, 6, 6,6)):
-        with ui.card():
+     with ui.layout_columns(col_widths=(6, 6, 6,6)):
+         with ui.card():
             ui.p("Este es nuestro proyecto de programación II, una app usando datos de EAFC26! ")
-
-        with ui.card():
-            ui.p("A continuación verán una serie de gráficos hechos con las librerías plotnine y seaborne. Para ver cada gráfico, vayan a la tab correspondiente de cada uno.")
-        with ui.card(style="width: fit-content; margin: 0 auto; text-align: center;"):
+         with ui.card():
+            ui.p("A continuacion, van a observar una coleccion de graficos hechos con las librerias plotnine y seaborne. Disfruten!")
+         with ui.card(style="width: fit-content; margin: 0 auto; text-align: center;"):
             ui.p("Aupa Athletic")
             ui.img(src = "AthleticCopaCampeones.jpg",style="max-height: 400px; width: auto; display: block; margin: 0 auto;")
-        with ui.card(style="width: fit-content; margin: 0 auto; text-align: center;"):
+         with ui.card(style="width: fit-content; margin: 0 auto; text-align: center;"):
             ui.p("Visca Barca")
             ui.img(src = "fcbarcelonachampions.png",style="max-height: 400px; width: auto; display: block; margin: 0 auto;")
 with ui.nav_panel("OVR Ligas"):
@@ -151,7 +149,7 @@ with ui.nav_panel("OVR Ligas"):
           + geom_boxplot()
           + theme_pitch()
       )
-with ui.nav_panel("Tab 2"):
+with ui.nav_panel("Stats por pos"):
   with ui.layout_sidebar():
     with ui.sidebar():
         ui.input_checkbox_group(
@@ -202,7 +200,7 @@ with ui.nav_panel("Tab 2"):
           + theme_pitch()
       )
 
-with ui.nav_panel("Tab 3"):
+with ui.nav_panel("Spider"):
   with ui.layout_sidebar():
     with ui.sidebar():
       ui.input_checkbox_group(
@@ -330,6 +328,64 @@ with ui.nav_panel("Tab 3"):
         texto.set_color(WHITE)
 
       return(fig)
+    ligas_tab4 = [
+    "LALIGA EA SPORTS",
+    "PREMIER LEAGUE",
+    "SERIE A ENILIVE",
+    "BUNDESLIGA",
+    "LIGUE 1 MCDONALD'S",
+    "MLS",
+    "LIGA PORTUGAL",
+    "TRENDYOL SÜPER LIG",
+    "EREDIVISIE",
+    "LPF",
+    "ROSHN SAUDI LEAGUE",
+]
+
+with ui.nav_panel("Tiros"):
+  with ui.layout_sidebar():
+    with ui.sidebar():
+      ui.input_checkbox_group(
+          "liga_tab4", "LIGAS", choices=ligas_tab4, selected=["LALIGA EA SPORTS"]
+      )
+      ui.input_checkbox_group(
+          "pos_tab4",
+          "Posición",
+          choices=["ATT", "MID", "DEF"],
+          selected=["ATT", "MID"],
+      )
+
+    @render.plot
+    def grafico4():
+      df = datos[datos["PosGroup"].isin(input.pos_tab4())]
+      if input.liga_tab4():
+        df = df[df["League"].isin(input.liga_tab4())]
+
+      fig, ax = plt.subplots(figsize=(8, 5), facecolor=PITCH_DARK)
+      ax.set_facecolor(PITCH_DARK)
+
+      if df.empty:
+        ax.text(0.5, 0.5, "Sin datos", color=WHITE, ha="center")
+        ax.axis("off")
+        return fig
+
+      top10 = (
+          df.sort_values("Long Shots", ascending=False)
+          .drop_duplicates("Name")
+          .head(10)[::-1]
+      )
+      barras = ax.barh(
+          top10["Name"], top10["Long Shots"], color=PALETTE[: len(top10)]
+      )
+
+      ax.bar_label(barras, padding=4, color=WHITE, fmt="%.0f")
+      ax.set_xlim(top10["Long Shots"].min() - 4, top10["Long Shots"].max() + 3)
+      ax.set_title("Top 10 tiros lejanos", color=GOLD)
+      ax.tick_params(colors=WHITE)
+      ax.spines[["top", "right"]].set_visible(False)
+      ax.spines[["bottom", "left"]].set_color(WHITE)
+      plt.tight_layout()
+      return fig
 with ui.nav_panel("GK"):
   with ui.layout_sidebar():
     with ui.sidebar():
@@ -365,4 +421,14 @@ with ui.nav_panel("GK"):
                 binwidth=5,
                 binrange=(47, 90),
         )
+
+
+
+
+
+
+
+
+
+
      
