@@ -79,15 +79,15 @@ colores = dict(zip(mis_5_ligas, cycle(PALETTE)))
 
 # --- Agrupación de posiciones para el gráfico de Tab 2 ---
 # Orden fijo pedido para el eje X (se excluye GK a propósito)
-POS_ORDER_TAB2 = ["CB", "LB/RB", "CDM", "CM", "LM/RM", "CAM", "RW/LW", "ST"]
+POS_ORDER_TAB2 = ["CB", "LB/RB", "CDM", "CM", "CAM", "LM/RM", "RW/LW", "ST"]
 
 POSITION_GROUPS_TAB2 = {
     "CB": "CB",
     "LB": "LB/RB", "RB": "LB/RB",
     "CDM": "CDM",
     "CM": "CM",
-    "LM": "LM/RM", "RM": "LM/RM",
     "CAM": "CAM",
+    "LM": "LM/RM", "RM": "LM/RM",
     "LW": "RW/LW", "RW": "RW/LW",
     "ST": "ST",
     # GK no está en el diccionario -> queda como NaN y se filtra después
