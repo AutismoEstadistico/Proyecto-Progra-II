@@ -144,8 +144,8 @@ with ui.nav_panel("OVR Ligas"):
 
       return (
           ggplot(filtered_df, aes(x="League", y="OVR", fill="League"))
-          + geom_boxplot(color="white", outlier_color="white")
-          + theme_pitch()
+          + geom_boxplot(color="white", outlier_color="white") + labs(title = "Overall por liga")
+          + theme_pitch() + theme(plot_title= element_text(color = GOLD))
       )
 with ui.nav_panel("Stats por pos"):
   with ui.layout_sidebar():
@@ -194,8 +194,8 @@ with ui.nav_panel("Stats por pos"):
           )
           + geom_line()
           + geom_point()
-          + labs(x="Posición", y="Promedio")
-          + theme_pitch()
+          + labs(x="Posición", y="Promedio", title = "Estadisticas basadas en la posicion del jugador")
+          + theme_pitch() + theme(plot_title= element_text(color = GOLD))
       )
 
 with ui.nav_panel("Spider"):
@@ -300,7 +300,7 @@ with ui.nav_panel("Spider"):
         graficados += 1
 
       if graficados == 0:
-        ax.set_title("Sin jugadores en los rangos elegidos", color=WHITE, pad=25)
+        ax.set_title("Sin jugadores en los rangos elegidos", color=GOLD, pad=25)
         ax.plot([], [], color="none", label="19-21 años (0000)")
         leyenda_vacia = ax.legend(
             loc="center left",
@@ -314,7 +314,7 @@ with ui.nav_panel("Spider"):
           texto.set_alpha(0)
         return fig
 
-      ax.set_title("", color=GOLD, fontsize=14, fontweight="bold", pad=25)
+      ax.set_title("Estadisticas promedio por rango de edad", color=GOLD, fontsize=14, fontweight="bold", pad=25)
 
       leyenda = ax.legend(
           loc="center left",
@@ -409,8 +409,8 @@ with ui.nav_panel("GK"):
             multiple = "stack",
             palette= COLORES_PAIS,
                 binwidth=5,
-                binrange=(47, 90),
-        )
+                binrange=(47, 90)
+        ).set_title("Cantidad de porteros con OVR X por edad").set_color(GOLD)
 
 
 
