@@ -4,10 +4,10 @@ Aplicación web interactiva desarrollada en **Python** utilizando **Shiny Expres
 
 ## Equipo de Desarrollo
 
-* **Jose Miguel Villalobos**
-* **Ian Guadamuz**
-* **Armando Arauz**
-* **Estefania Robles**
+- **Jose Miguel Villalobos**
+- **Ian Guadamuz**
+- **Armando Arauz**
+- **Estefania Robles**
 
 ## Objetivos y Preguntas de Investigación
 
@@ -24,6 +24,20 @@ A través de los cinco módulos visuales de la aplicación, el análisis respond
 3. **Curva de Rendimiento y Edad:** ¿De qué manera se transforman los atributos técnicos y físicos promedio de los futbolistas al comparar dos cohortes generacionales o rangos de edad específicos definidos por el usuario?
 4. **Élite del Disparo de Media y Larga Distancia:** ¿Quiénes son los 10 mejores especialistas en tiros lejanos (*Long Shots*) dentro de las ligas seleccionadas y cómo cambia este ranking al filtrar de forma combinada entre delanteros, mediocampistas y defensores?
 5. **Demografía y Calidad bajo los Tres Palos:** ¿Cómo se distribuye la valoración global (*OVR*) de los porteros dentro de un rango de edad determinado y qué nacionalidades dominan proporcionalmente cada nivel de rendimiento?
+
+## Descripción de los Datos
+
+El análisis utiliza la base de datos **`EAFC26.csv`**, compuesta por **17,873 registros** (jugadores) y **59 variables** extraídas del ecosistema de EA Sports FC 26.
+
+- **Cobertura y Demografía:** Incluye futbolistas de **57 ligas**, **673 clubes** y **157 nacionalidades**, abarcando tanto la rama masculina (**16,228** jugadores) como la femenina (**1,645** jugadoras). Las edades van de los **17** a los **44 años** (mediana de **26 años**) y la valoración global (`OVR`) oscila entre **47** y **91** puntos (mediana de **67**).
+- **Demarcaciones (`Position`):** Los registros se dividen en **15,859 jugadores de campo** y **2,014 porteros**, clasificados en 12 posiciones principales (`GK`, `CB`, `LB`, `RB`, `CDM`, `CM`, `CAM`, `LM`, `RM`, `LW`, `RW`, `ST`).
+- **Estructura de Variables:**
+  - **Identificación y Contexto:** `ID`, `Rank`, `Name`, `GENDER`, `Age`, `Nation`, `League`, `Team`, `Position` y `Alternative positions`.
+  - **Métricas Base (6 atributos globales):** `PAC`, `SHO`, `PAS`, `DRI`, `DEF` y `PHY`.
+  - **Atributos Específicos de Campo (29 métricas):** Variables técnicas, físicas y mentales en escala de 1 a 99 (ej. `Finishing`, `Long Shots`, `Short Passing`, `Dribbling`, `Interceptions`, `Stamina`, `Strength`, `Composure`).
+  - **Atributos de Portería (5 métricas):** `GK Diving`, `GK Handling`, `GK Kicking`, `GK Positioning` y `GK Reflexes`.
+  - **Características Físicas y de Juego:** `Height`, `Weight`, `Preferred foot`, `Weak foot`, `Skill moves`, `play style`, `url` y `card`.
+- **Valores Faltantes (`NaN`):** Las variables numéricas base y demográficas están completas. Los valores nulos responden únicamente a la estructura del juego: las 5 métricas de arquero aplican solo para los **2,014** porteros (siendo nulas en jugadores de campo) y `Alternative positions` es nula en **6,380** jugadores sin posición secundaria registrada.
 
 ## Visualizaciones y Funcionalidades Interactivas
 
@@ -49,12 +63,12 @@ El código está modularizado para separar la lógica de la interfaz, el procesa
 
 ## Stack Tecnológico
 
-* **Framework Web:** `shiny` (Shiny Express para Python)
-* **Manipulación y Análisis de Datos:** `pandas`, `numpy`
-* **Visualización de Datos:**
-  * `plotnine` (implementación de la gramática de gráficos de *ggplot2* en Python)
-  * `seaborn`
-  * `matplotlib`
+- **Framework Web:** `shiny` (Shiny Express para Python)
+- **Manipulación y Análisis de Datos:** `pandas`, `numpy`
+- **Visualización de Datos:**
+  - `plotnine` (implementación de la gramática de gráficos de *ggplot2* en Python)
+  - `seaborn`
+  - `matplotlib`
 
 ## Instalación y Ejecución Local
 
@@ -101,6 +115,6 @@ Una vez ejecutado, abre tu navegador en la dirección local que indica la termin
 
 El desarrollo se gestionó mediante un repositorio compartido aplicando buenas prácticas de control de versiones:
 
-* Creación de ramas independientes (`feature/...`) para el desarrollo de cada visualización, temas personalizados y componentes de UI.
-* Integración controlada hacia la rama principal (`main`) mediante *Pull Requests* y *merges* verificados.
-* Commits atómicos y descriptivos documentando el progreso de cada integrante.
+- Creación de ramas independientes (`feature/...`) para el desarrollo de cada visualización, temas personalizados y componentes de UI.
+- Integración controlada hacia la rama principal (`main`) mediante *Pull Requests* y *merges* verificados.
+- Commits atómicos y descriptivos documentando el progreso de cada integrante.
